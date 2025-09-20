@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Components/BoxComponent.h"
 #include "Vaisseau.generated.h"
 
 UCLASS()
@@ -18,6 +19,27 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Collision")
+	UBoxComponent* CollisionBox;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
+	TSubclassOf<class AProjectiles> ProjectileClass;
+
+	// ---- Vies ----
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Vie")
+	int32 Vies;
+	int GetVies(){return Vies;};
+
+	// ---- Fonction appelée lors de l'overlap ----
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+						UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+						bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void Shoot();
+
 
 public:	
 	// Called every frame

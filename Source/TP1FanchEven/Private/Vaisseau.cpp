@@ -4,6 +4,10 @@
 #include "Vaisseau.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Components/StaticMeshComponent.h"
+#include "Meteroite.h"
+#include "Projectiles.h"
+#include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AVaisseau::AVaisseau()
@@ -11,24 +15,47 @@ AVaisseau::AVaisseau()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Mesh du vaisseau comme racine
+	// Mesh du vaisseau
 	VaisseauMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VaisseauMesh"));
-	RootComponent = VaisseauMesh;
 
-	// Composant de mouvement (permet AddMovementInput sur un Pawn)
+	// Box de collision comme racine
+	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
+	RootComponent = CollisionBox;
+
+	// Attache le mesh au collision box
+	VaisseauMesh->SetupAttachment(CollisionBox);
+
+	// Paramètres de collision
+	CollisionBox->SetBoxExtent(FVector(100.f, 100.f, 50.f)); 
+	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	CollisionBox->SetCollisionObjectType(ECC_Pawn);
+	CollisionBox->SetCollisionResponseToAllChannels(ECR_Overlap);
+	CollisionBox->SetGenerateOverlapEvents(true);
+
+	// Mouvement
 	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 	MovementComponent->UpdatedComponent = RootComponent;
+
+
+	// Vies initiales
+	Vies = 3;
 }
 
 // Called when the game starts or when spawned
 void AVaisseau::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
 	
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	if (PC)
 	{
 		PC->Possess(this);
 	}
+
+	CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AVaisseau::OnOverlapBegin);
+
 }
 
 // Called every frame
@@ -56,6 +83,8 @@ void AVaisseau::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AVaisseau::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AVaisseau::MoveRight);
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AVaisseau::Shoot);
+
 }
 
 void AVaisseau::MoveForward(float Value)
@@ -95,5 +124,46 @@ void AVaisseau::MoveRight(float Value)
 		}
 	}
 }
+
+void AVaisseau::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+							   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+							   bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor && OtherActor != this)
+	{
+		if (OtherActor->IsA(AMeteroite::StaticClass())) 
+		{
+			OtherActor->Destroy();
+			Vies--;
+
+			if (Vies <= 0)
+			{
+				Destroy();
+				FName NextLevel = FName("Menu_FIN");
+
+				UGameplayStatics::OpenLevel(this, NextLevel);
+			}
+			
+		}
+	}
+}
+
+void AVaisseau::Shoot()
+{
+	if (ProjectileClass)
+	{
+		// Position du spawn du projectile (devant le vaisseau)
+		FVector MuzzleLocation = GetActorLocation() + GetActorForwardVector() * 100.f;
+		FRotator MuzzleRotation = GetActorRotation();
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+
+		// Spawn du projectile
+		GetWorld()->SpawnActor<AProjectiles>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+	}
+}
+
 
 
