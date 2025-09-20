@@ -4,27 +4,20 @@
 
 AProjectiles::AProjectiles()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
-	// Collision
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(15.f);
-	CollisionComp->SetCollisionProfileName("BlockAllDynamic");
+	CollisionComp->SetCollisionProfileName("OverlapAllDynamic");
 	RootComponent = CollisionComp;
 
-	// Mesh optionnel
-	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
-	ProjectileMesh->SetupAttachment(RootComponent);
-
-	// Mouvement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovement->InitialSpeed = 1500.f;
-	ProjectileMovement->MaxSpeed = 1500.f;
+	ProjectileMovement->InitialSpeed = 3000.f;
+	ProjectileMovement->MaxSpeed = 3000.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 
-	// Durée de vie auto
-	InitialLifeSpan = 3.0f;
+	InitialLifeSpan = 3.f;
 }
 
 void AProjectiles::BeginPlay()
@@ -33,18 +26,19 @@ void AProjectiles::BeginPlay()
 	CollisionComp->OnComponentHit.AddDynamic(this, &AProjectiles::OnHit);
 }
 
-void AProjectiles::Tick(float DeltaTime)
+void AProjectiles::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
+						 UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+						 const FHitResult& Hit)
 {
-	Super::Tick(DeltaTime);
+	Destroy();
 }
 
-void AProjectiles::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
-								UPrimitiveComponent* OtherComp, FVector NormalImpulse,
-								const FHitResult& Hit)
+void AProjectiles::FireInDirection(const FVector& ShootDir)
 {
-	if (OtherActor && OtherActor != this)
+	if (ProjectileMovement)
 	{
-		// Exemple : détruire projectile au contact
-		Destroy();
+		ProjectileMovement->Velocity = ShootDir * ProjectileMovement->InitialSpeed;
+		// Optionnel : corrige la rotation si le mesh n’est pas orienté correctement
+		SetActorRotation(ShootDir.Rotation());
 	}
 }

@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Vaisseau.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Components/StaticMeshComponent.h"
@@ -9,24 +6,19 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-// Sets default values
 AVaisseau::AVaisseau()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Mesh du vaisseau comme racine
-	// Mesh du vaisseau
+	// Mesh
 	VaisseauMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VaisseauMesh"));
 
-	// Box de collision comme racine
+	// Collision
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	RootComponent = CollisionBox;
-
-	// Attache le mesh au collision box
 	VaisseauMesh->SetupAttachment(CollisionBox);
 
-	// Paramètres de collision
-	CollisionBox->SetBoxExtent(FVector(100.f, 100.f, 50.f)); 
+	CollisionBox->SetBoxExtent(FVector(100.f, 100.f, 50.f));
 	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionBox->SetCollisionObjectType(ECC_Pawn);
 	CollisionBox->SetCollisionResponseToAllChannels(ECR_Overlap);
@@ -36,47 +28,34 @@ AVaisseau::AVaisseau()
 	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 	MovementComponent->UpdatedComponent = RootComponent;
 
-
-	// Vies initiales
+	// Vies
 	Vies = 3;
+	CurrentMoveX = 0;
+	CurrentMoveY = 0;
+	CurrentShootDirection = FVector(1,0,0); // par défaut droite
 }
 
-// Called when the game starts or when spawned
 void AVaisseau::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-	
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
-	if (PC)
-	{
-		PC->Possess(this);
-	}
+	if (PC) PC->Possess(this);
 
 	CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AVaisseau::OnOverlapBegin);
-
 }
 
-// Called every frame
 void AVaisseau::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Clamp position dans la zone
 	FVector Pos = GetActorLocation();
-
-	float MinX = -1500.f;
-	float MaxX = -330.f;
-	float MinY = -1420.f;
-	float MaxY = 960.f;
-
-	Pos.X = FMath::Clamp(Pos.X, MinX, MaxX);
-	Pos.Y = FMath::Clamp(Pos.Y, MinY, MaxY);
-
+	Pos.X = FMath::Clamp(Pos.X, -1500.f, -330.f);
+	Pos.Y = FMath::Clamp(Pos.Y, -1420.f, 960.f);
 	SetActorLocation(Pos);
 }
 
-// Bind des touches
 void AVaisseau::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -84,44 +63,39 @@ void AVaisseau::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("MoveForward", this, &AVaisseau::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AVaisseau::MoveRight);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AVaisseau::Shoot);
-
 }
 
 void AVaisseau::MoveForward(float Value)
 {
-	if (Value != 0.0f)
-	{
-		// Déplacement toujours selon l'axe Y du monde
-		AddMovementInput(FVector::ForwardVector, Value);
+	AddMovementInput(FVector::ForwardVector, Value);
+	CurrentMoveY = Value;
 
-		// Rotation du sprite
-		if (Value > 0)
-		{
-			SetActorRotation(FRotator(0.f, -90.f, 0.f)); // Haut
-		}
-		else
-		{
-			SetActorRotation(FRotator(0.f, 90.f, 0.f)); // Bas
-		}
+	if (Value > 0)
+	{
+		VaisseauMesh->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+		CurrentShootDirection = FVector(0, 1, 0);
+	}
+	else if (Value < 0)
+	{
+		VaisseauMesh->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+		CurrentShootDirection = FVector(0, -1, 0);
 	}
 }
 
 void AVaisseau::MoveRight(float Value)
 {
-	if (Value != 0.0f)
-	{
-		// Déplacement toujours selon l'axe X du monde
-		AddMovementInput(FVector::RightVector, Value);
+	AddMovementInput(FVector::RightVector, Value);
+	CurrentMoveX = Value;
 
-		// Rotation du sprite
-		if (Value > 0)
-		{
-			SetActorRotation(FRotator(0.f, 0.f, 0.f)); // Droite
-		}
-		else
-		{
-			SetActorRotation(FRotator(0.f, 180.f, 0.f)); // Gauche
-		}
+	if (Value > 0)
+	{
+		VaisseauMesh->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+		CurrentShootDirection = FVector(1, 0, 0);
+	}
+	else if (Value < 0)
+	{
+		VaisseauMesh->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+		CurrentShootDirection = FVector(-1, 0, 0);
 	}
 }
 
@@ -129,41 +103,50 @@ void AVaisseau::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 							   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 							   bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor && OtherActor != this)
+	if (OtherActor && OtherActor != this && OtherActor->IsA(AMeteroite::StaticClass()))
 	{
-		if (OtherActor->IsA(AMeteroite::StaticClass())) 
+		OtherActor->Destroy();
+		Vies--;
+		if (Vies <= 0)
 		{
-			OtherActor->Destroy();
-			Vies--;
-
-			if (Vies <= 0)
-			{
-				Destroy();
-				FName NextLevel = FName("Menu_FIN");
-
-				UGameplayStatics::OpenLevel(this, NextLevel);
-			}
-			
+			Destroy();
+			UGameplayStatics::OpenLevel(this, FName("Menu_FIN"));
 		}
 	}
 }
 
 void AVaisseau::Shoot()
 {
-	if (ProjectileClass)
+	if (!ProjectileClass) return;
+
+	// Récupère la direction “avant” du mesh
+	FVector ShootDirection = VaisseauMesh->GetForwardVector();
+
+	// Applique une rotation de correction si le mesh est décalé de 90 degrés
+	FRotator CorrectionRotation = FRotator(0.f, 90.f, 0.f); // ajuste à -90.f si nécessaire
+	ShootDirection = CorrectionRotation.RotateVector(ShootDirection);
+
+	// Position de spawn du projectile légèrement devant le vaisseau
+	FVector MuzzleLocation = GetActorLocation() + ShootDirection * 100.f;
+
+	// Rotation du projectile pour qu’il regarde vers la direction du tir
+	FRotator MuzzleRotation = ShootDirection.Rotation();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = GetInstigator();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	// Spawn du projectile
+	AProjectiles* Projectile = GetWorld()->SpawnActor<AProjectiles>(
+		ProjectileClass,
+		MuzzleLocation,
+		MuzzleRotation,
+		SpawnParams
+	);
+
+	if (Projectile)
 	{
-		// Position du spawn du projectile (devant le vaisseau)
-		FVector MuzzleLocation = GetActorLocation() + GetActorForwardVector() * 100.f;
-		FRotator MuzzleRotation = GetActorRotation();
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = GetInstigator();
-
-		// Spawn du projectile
-		GetWorld()->SpawnActor<AProjectiles>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+		Projectile->FireInDirection(ShootDirection);
 	}
 }
-
-
-
