@@ -5,6 +5,7 @@
 #include "Projectiles.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "MonGameInstance.h"
 
 AVaisseau::AVaisseau()
 {
@@ -109,6 +110,12 @@ void AVaisseau::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 		Vies--;
 		if (Vies <= 0)
 		{
+			UMonGameInstance* GI = Cast<UMonGameInstance>(UGameplayStatics::GetGameInstance(this));
+			if (GI)
+			{
+				GI->setMeilleurScore(); 
+			}
+
 			Destroy();
 			UGameplayStatics::OpenLevel(this, FName("Menu_FIN"));
 		}

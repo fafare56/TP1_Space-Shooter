@@ -1,6 +1,9 @@
 #include "Projectiles.h"
+#include "Meteroite.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "MonGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 AProjectiles::AProjectiles()
 {
@@ -23,14 +26,23 @@ AProjectiles::AProjectiles()
 void AProjectiles::BeginPlay()
 {
 	Super::BeginPlay();
-	CollisionComp->OnComponentHit.AddDynamic(this, &AProjectiles::OnHit);
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectiles::OnOverlapBegin);
 }
 
-void AProjectiles::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
-						 UPrimitiveComponent* OtherComp, FVector NormalImpulse,
-						 const FHitResult& Hit)
+void AProjectiles::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+							   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+							   bool bFromSweep, const FHitResult& SweepResult)
 {
-	Destroy();
+	if (OtherActor && OtherActor != this && OtherActor->IsA(AMeteroite::StaticClass()))
+	{
+		OtherActor->Destroy();
+		Destroy();
+		UMonGameInstance* GI = Cast<UMonGameInstance>(UGameplayStatics::GetGameInstance(this));
+		if (GI)
+		{
+			GI->AddScore(10); // 10 points par météorite
+		}
+	}
 }
 
 void AProjectiles::FireInDirection(const FVector& ShootDir)
@@ -38,7 +50,6 @@ void AProjectiles::FireInDirection(const FVector& ShootDir)
 	if (ProjectileMovement)
 	{
 		ProjectileMovement->Velocity = ShootDir * ProjectileMovement->InitialSpeed;
-		// Optionnel : corrige la rotation si le mesh n’est pas orienté correctement
 		SetActorRotation(ShootDir.Rotation());
 	}
 }
