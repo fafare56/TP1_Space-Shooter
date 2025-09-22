@@ -25,6 +25,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UFloatingPawnMovement* MovementComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting|Properties")
+	class UNiagaraSystem* ExplosionNS;
 
 	// Projetiles
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")

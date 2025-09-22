@@ -5,6 +5,8 @@
 #include "Projectiles.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 #include "MonGameInstance.h"
 
 AVaisseau::AVaisseau()
@@ -118,6 +120,15 @@ void AVaisseau::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 
 			Destroy();
 			UGameplayStatics::OpenLevel(this, FName("Menu_FIN"));
+		}
+		if (ExplosionNS)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				ExplosionNS,                       
+				GetActorLocation(),                
+				FRotator::ZeroRotator             
+			);
 		}
 	}
 }

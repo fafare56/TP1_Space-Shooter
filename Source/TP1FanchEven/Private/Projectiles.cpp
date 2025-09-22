@@ -2,6 +2,8 @@
 #include "Meteroite.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 #include "MonGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -39,7 +41,17 @@ void AProjectiles::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 		if (Meteo)
 		{
 			Meteo->BaisserVies();
+			if (ExplosionNS)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					ExplosionNS,                       
+					GetActorLocation(),                
+					FRotator::ZeroRotator             
+				);
+			}
 		}
+		
 		Destroy();
 		
 	}

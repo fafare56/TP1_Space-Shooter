@@ -2,7 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "NiagaraSystem.h"
 #include "Projectiles.generated.h"
+
 
 UCLASS()
 class TP1FANCHEVEN_API AProjectiles : public AActor
@@ -21,6 +23,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category="Movement")
 	class UProjectileMovementComponent* ProjectileMovement;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting|Properties")
+    class UNiagaraSystem* ExplosionNS;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
