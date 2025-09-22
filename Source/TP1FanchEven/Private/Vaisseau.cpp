@@ -29,7 +29,7 @@ AVaisseau::AVaisseau()
 	MovementComponent->UpdatedComponent = RootComponent;
 
 	// Vies
-	Vies = 5;
+	Vies = 10;
 	CurrentMoveX = 0;
 	CurrentMoveY = 0;
 	CurrentShootDirection = FVector(1,0,0); // par défaut droite
