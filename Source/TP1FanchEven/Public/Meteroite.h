@@ -12,10 +12,16 @@ class TP1FANCHEVEN_API AMeteroite : public AActor
 public:
 	AMeteroite();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Vie")
+	int32 ViesMeteroites;
+
 	virtual void Tick(float DeltaTime) override;
 
 	// Initialisation de la météorite
 	void InitMeteorite(FVector SpawnPos, FVector Direction);
+
+	UFUNCTION()
+	void BaisserVies();
 
 protected:
 	virtual void BeginPlay() override;

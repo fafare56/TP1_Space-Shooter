@@ -35,13 +35,13 @@ void AProjectiles::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 {
 	if (OtherActor && OtherActor != this && OtherActor->IsA(AMeteroite::StaticClass()))
 	{
-		OtherActor->Destroy();
-		Destroy();
-		UMonGameInstance* GI = Cast<UMonGameInstance>(UGameplayStatics::GetGameInstance(this));
-		if (GI)
+		AMeteroite* Meteo = Cast<AMeteroite>(OtherActor);
+		if (Meteo)
 		{
-			GI->AddScore(10); // 10 points par météorite
+			Meteo->BaisserVies();
 		}
+		Destroy();
+		
 	}
 }
 
