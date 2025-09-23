@@ -13,10 +13,8 @@ AVaisseau::AVaisseau()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Mesh
 	VaisseauMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VaisseauMesh"));
 
-	// Collision
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	RootComponent = CollisionBox;
 	VaisseauMesh->SetupAttachment(CollisionBox);
@@ -27,15 +25,13 @@ AVaisseau::AVaisseau()
 	CollisionBox->SetCollisionResponseToAllChannels(ECR_Overlap);
 	CollisionBox->SetGenerateOverlapEvents(true);
 
-	// Mouvement
 	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 	MovementComponent->UpdatedComponent = RootComponent;
 
-	// Vies
 	Vies = 3;
 	CurrentMoveX = 0;
 	CurrentMoveY = 0;
-	CurrentShootDirection = FVector(1,0,0); // par défaut droite
+	CurrentShootDirection = FVector(1,0,0); 
 }
 
 void AVaisseau::BeginPlay()
@@ -52,7 +48,7 @@ void AVaisseau::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Clamp position dans la zone
+
 	FVector Pos = GetActorLocation();
 	Pos.X = FMath::Clamp(Pos.X, -1500.f, -330.f);
 	Pos.Y = FMath::Clamp(Pos.Y, -1420.f, 960.f);
@@ -137,17 +133,13 @@ void AVaisseau::Shoot()
 {
 	if (!ProjectileClass) return;
 
-	// Récupère la direction “avant” du mesh
 	FVector ShootDirection = VaisseauMesh->GetForwardVector();
 
-	// Applique une rotation de correction si le mesh est décalé de 90 degrés
-	FRotator CorrectionRotation = FRotator(0.f, 90.f, 0.f); // ajuste à -90.f si nécessaire
+	FRotator CorrectionRotation = FRotator(0.f, 90.f, 0.f);
 	ShootDirection = CorrectionRotation.RotateVector(ShootDirection);
 
-	// Position de spawn du projectile légèrement devant le vaisseau
 	FVector MuzzleLocation = GetActorLocation() + ShootDirection * 100.f;
 
-	// Rotation du projectile pour qu’il regarde vers la direction du tir
 	FRotator MuzzleRotation = ShootDirection.Rotation();
 
 	FActorSpawnParameters SpawnParams;
@@ -155,7 +147,6 @@ void AVaisseau::Shoot()
 	SpawnParams.Instigator = GetInstigator();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	// Spawn du projectile
 	AProjectiles* Projectile = GetWorld()->SpawnActor<AProjectiles>(
 		ProjectileClass,
 		MuzzleLocation,

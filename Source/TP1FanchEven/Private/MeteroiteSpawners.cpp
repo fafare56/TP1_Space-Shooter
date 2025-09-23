@@ -38,7 +38,6 @@ void AMeteroiteSpawners::SpawnMeteorite()
 
     FVector PlayerPos = PlayerPawn->GetActorLocation();
 
-    // Coordonnées limites visibles de la caméra
     float MinX = -1500.f;
     float MaxX = -330.f;
     float MinY = -1420.f;
@@ -46,29 +45,29 @@ void AMeteroiteSpawners::SpawnMeteorite()
 
     FVector SpawnPos = PlayerPos;
 
-    int Side = FMath::RandRange(0, 3); // 0=gauche, 1=droite, 2=haut, 3=bas
+    int Side = FMath::RandRange(0, 3); 
 
     switch (Side)
     {
-    case 0: // gauche
-        SpawnPos.X = MinX - 200.f; // 200 unités hors champ
+    case 0: 
+        SpawnPos.X = MinX - 200.f; 
         SpawnPos.Y = FMath::RandRange(MinY, MaxY);
         break;
-    case 1: // droite
+    case 1: 
         SpawnPos.X = MaxX + 200.f;
         SpawnPos.Y = FMath::RandRange(MinY, MaxY);
         break;
-    case 2: // haut
+    case 2:
         SpawnPos.Y = MinY - 200.f;
         SpawnPos.X = FMath::RandRange(MinX, MaxX);
         break;
-    case 3: // bas
+    case 3:
         SpawnPos.Y = MaxY + 200.f;
         SpawnPos.X = FMath::RandRange(MinX, MaxX);
         break;
     }
 
-    SpawnPos.Z = 0.f; // top-down 2D
+    SpawnPos.Z = 0.f; 
 
     FActorSpawnParameters SpawnParams;
     AMeteroite* Meteor = GetWorld()->SpawnActor<AMeteroite>(

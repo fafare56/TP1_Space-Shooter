@@ -17,7 +17,6 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	// Initialisation de la météorite
 	void InitMeteorite(FVector SpawnPos, FVector Direction);
 
 	UFUNCTION()
@@ -27,6 +26,6 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	FVector MoveDirection;   // Direction normalisée
-	float Speed;             // Vitesse en unités/s
+	FVector MoveDirection;   
+	float Speed;             
 };

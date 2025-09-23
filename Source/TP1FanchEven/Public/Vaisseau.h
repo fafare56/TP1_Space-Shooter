@@ -16,7 +16,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	// Collision et mesh
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Collision")
 	UBoxComponent* CollisionBox;
 
@@ -29,21 +28,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting|Properties")
 	class UNiagaraSystem* ExplosionNS;
 
-	// Projetiles
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
 	TSubclassOf<class AProjectiles> ProjectileClass;
 
-	// Vies
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Vie")
 	int32 Vies;
 
-	// Direction actuelle
 	FVector CurrentShootDirection;
 
 	int CurrentMoveX;
 	int CurrentMoveY;
 
-	// Fonction overlap
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 						UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
@@ -55,7 +51,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Mouvement
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 };

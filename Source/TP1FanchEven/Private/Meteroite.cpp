@@ -5,7 +5,7 @@
 AMeteroite::AMeteroite()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	Speed = 600.f; // vitesse
+	Speed = 600.f; 
 	ViesMeteroites = FMath::RandRange(1, 3);
 }
 
@@ -17,10 +17,10 @@ void AMeteroite::BeginPlay()
 
 void AMeteroite::InitMeteorite(FVector SpawnPos, FVector Direction)
 {
-	SpawnPos.Z = 0.f;            // reste dans le plan XY
+	SpawnPos.Z = 0.f;          
 	SetActorLocation(SpawnPos);
 	MoveDirection = Direction.GetSafeNormal();
-	MoveDirection.Z = 0.f;       // s'assurer qu'on reste en XY
+	MoveDirection.Z = 0.f;      
 }
 
 void AMeteroite::Tick(float DeltaTime)
@@ -30,7 +30,7 @@ void AMeteroite::Tick(float DeltaTime)
 	if (!MoveDirection.IsZero())	
 	{
 		FVector NewLocation = GetActorLocation() + MoveDirection * Speed * DeltaTime;
-		NewLocation.Z = 0.f;   // verrouiller Z
+		NewLocation.Z = 0.f;   
 		SetActorLocation(NewLocation);
 	}
 }
@@ -44,7 +44,7 @@ void AMeteroite::BaisserVies()
 		UMonGameInstance* GI = Cast<UMonGameInstance>(UGameplayStatics::GetGameInstance(this));
 		if (GI)
 		{
-			GI->AddScore(10); // 10 points par météorite
+			GI->AddScore(10); 
 		}
 	}
 		
